@@ -4,18 +4,20 @@ import { Link } from "react-router-dom";
  * The site's single understated call-to-action style — small uppercase
  * label with an arrow that nudges forward on hover/focus.
  */
-export function ArrowLink({ to, href, download, children, direction = "right", className = "" }) {
+export function ArrowLink({ to, href, onClick, download, children, direction = "right", className = "" }) {
   const isDown = direction === "down";
   const arrow = isDown ? "↓" : "→";
-  const Component = href ? "a" : Link;
-  const linkProps = href
-    ? {
-        href,
-        download,
-        target: !download && href.startsWith("http") ? "_blank" : undefined,
-        rel: !download && href.startsWith("http") ? "noreferrer" : undefined,
-      }
-    : { to };
+  const Component = onClick ? "button" : href ? "a" : Link;
+  const linkProps = onClick
+    ? { type: "button", onClick }
+    : href
+      ? {
+          href,
+          download,
+          target: !download && href.startsWith("http") ? "_blank" : undefined,
+          rel: !download && href.startsWith("http") ? "noreferrer" : undefined,
+        }
+      : { to };
 
   return (
     <Component

@@ -4,7 +4,7 @@ import { Container } from "../components/ui/Container.jsx";
 import { Line } from "../components/ui/Line.jsx";
 import { RevealText } from "../components/ui/RevealText.jsx";
 import { PlaceholderMedia } from "../components/ui/PlaceholderMedia.jsx";
-import { projects } from "../content/projects.js";
+import { usePortfolioData } from "../hooks/usePortfolioData.jsx";
 
 const SECTIONS = [
   ["overview", "Overview"],
@@ -17,19 +17,26 @@ const SECTIONS = [
 
 export default function Project() {
   const { slug } = useParams();
+  const { status, projects } = usePortfolioData();
   const index = projects.findIndex((project) => project.slug === slug);
   const project = projects[index];
 
   if (!project) {
     return (
       <Container className="py-32 text-center">
-        <h1 className="font-display text-4xl text-ink">Project not found</h1>
-        <p className="mt-4 text-muted">
-          This project may have moved or no longer exists.
-        </p>
-        <Link to="/work" className="mt-8 inline-block text-xs uppercase tracking-widest2 text-accent">
-          ← Back to work
-        </Link>
+        <h1 className="font-display text-4xl text-ink">
+          {status === "loading" ? "Loading…" : "Project not found"}
+        </h1>
+        {status !== "loading" && (
+          <>
+            <p className="mt-4 text-muted">
+              This project may have moved or no longer exists.
+            </p>
+            <Link to="/#work" className="mt-8 inline-block text-xs uppercase tracking-widest2 text-accent">
+              ← Back to work
+            </Link>
+          </>
+        )}
       </Container>
     );
   }
@@ -37,10 +44,14 @@ export default function Project() {
   const previous = projects[(index - 1 + projects.length) % projects.length];
   const next = projects[(index + 1) % projects.length];
   const sections = SECTIONS.filter(([key]) => project[key]);
+  const links = [
+    project.github_url && { label: "View repository", url: project.github_url },
+    project.external_url && { label: "Visit link", url: project.external_url },
+  ].filter(Boolean);
 
   return (
     <>
-      <Helmet title={project.title} description={project.shortDescription} />
+      <Helmet title={project.title} description={project.short_description} />
 
       <Container className="py-24 sm:py-32">
         <RevealText as="div" className="text-xs uppercase tracking-widest2 text-accent">
@@ -58,9 +69,9 @@ export default function Project() {
         )}
 
         <RevealText delay={0.15} className="mt-12">
-          {project.image ? (
+          {project.image_url ? (
             <img
-              src={project.image}
+              src={project.image_url}
               alt={project.title}
               loading="lazy"
               className="aspect-[16/9] w-full border border-line/40 object-cover"
@@ -92,11 +103,11 @@ export default function Project() {
               </div>
             )}
 
-            {project.links?.length > 0 && (
+            {links.length > 0 && (
               <div>
                 <h2 className="text-xs uppercase tracking-widest2 text-accent">Links</h2>
                 <ul className="mt-3 space-y-2">
-                  {project.links.map((link) => (
+                  {links.map((link) => (
                     <li key={link.url}>
                       <a
                         href={link.url}

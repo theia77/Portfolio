@@ -1,13 +1,17 @@
 import { useEffect } from "react";
-import { site } from "../../content/site.js";
+import { usePortfolioData } from "../../hooks/usePortfolioData.jsx";
+import { fallbackSite } from "../../content/site.js";
 
 /**
  * Minimal document-title/meta-description setter — avoids pulling in a
  * dedicated head-management dependency for something this small.
  */
 export function Helmet({ title, description }) {
+  const { siteSettings } = usePortfolioData();
+  const siteName = siteSettings?.name || fallbackSite.name;
+
   useEffect(() => {
-    document.title = title ? `${title} — ${site.displayName}` : site.displayName;
+    document.title = title ? `${title} — ${siteName}` : siteName;
 
     if (description) {
       let tag = document.querySelector('meta[name="description"]');
@@ -18,7 +22,7 @@ export function Helmet({ title, description }) {
       }
       tag.setAttribute("content", description);
     }
-  }, [title, description]);
+  }, [title, description, siteName]);
 
   return null;
 }

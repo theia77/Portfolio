@@ -21,9 +21,9 @@ export function ProjectListItem({ project, index }) {
           {project.title}
         </motion.h3>
         <span className="mt-1 block h-px w-0 bg-accent transition-all duration-500 ease-editorial group-hover:w-16" />
-        {project.shortDescription && (
+        {project.short_description && (
           <p className="mt-3 max-w-lg text-sm text-muted">
-            {project.shortDescription}
+            {project.short_description}
           </p>
         )}
       </div>

@@ -1,7 +1,7 @@
 import { RevealText } from "../ui/RevealText.jsx";
 
 export function TimelineItem({ entry }) {
-  const range = [entry.startYear, entry.endYear].filter(Boolean).join(" — ");
+  const range = [entry.start_year, entry.end_year].filter(Boolean).join(" — ");
 
   return (
     <RevealText as="div" className="relative pl-10 sm:pl-12">

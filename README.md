@@ -1,11 +1,15 @@
 # Portfolio
 
-A minimal, editorial personal-archive portfolio. React + Vite + Tailwind CSS + Framer Motion.
+A minimal, editorial personal-archive portfolio: one continuous scrolling
+page, content sourced from Supabase, with three large cinematic video
+layers that blend into the page as you scroll. React + Vite + Tailwind CSS
++ Framer Motion.
 
 ## Getting started
 
 ```bash
 npm install
+cp .env.example .env.local   # then fill in your Supabase project's values
 npm run dev
 ```
 
@@ -15,59 +19,88 @@ npm run preview   # preview the production build
 npm run lint       # eslint
 ```
 
-## Editing content
+## Editing content — Supabase, not code
 
-Content is fully separated from presentation. To update the site, you should
-only need to edit files inside `src/content/`:
+All real content (name, tagline, email, about copy, education, projects,
+skills, socials, résumé link) lives in Supabase, not in the React source.
+To update the site:
 
-| File | Controls |
-| --- | --- |
-| `site.js` | Name, tagline, intro, navigation labels, socials, email |
-| `about.js` | About page copy, currently, interests |
-| `skills.js` | Grouped skill lists shown on the About page |
-| `education.js` | Education timeline entries — add/remove freely |
-| `projects.js` | Project index and detail pages — add/remove freely |
-| `contact.js` | Contact page copy |
-| `resume.js` | Resume page copy and the PDF path |
+1. Open your Supabase project's **Table Editor**.
+2. Edit a row in `site_settings`, `about`, `education`, `projects`,
+   `skills` or `social_links`.
+3. Reload the site — no code change, no redeploy.
 
-Adding or removing entries from `education.js` or `projects.js` automatically
-updates the Education and Work pages and the project detail template — no
-component changes required. Every field beyond the required minimum (`slug`/
-`title`/`category` for projects, `id`/`institution`/`degree` for education) is
-optional and the layout adapts gracefully when it's missing.
+| Table | Controls | Notes |
+| --- | --- | --- |
+| `site_settings` | Name, role/tagline, intro, email, résumé link, copyright year | Single row, `id = 1` |
+| `about` | Headline, description paragraphs, currently, interests | The row with `is_active = true` (most recently updated if several) |
+| `education` | Timeline entries | Add/remove rows freely; ordered by `sort_order` |
+| `projects` | Project index + detail pages | Add/remove rows freely; ordered by `sort_order`; `featured` is available for future use |
+| `skills` | Grouped skill lists (no percentages) | One row per skill; grouped by `group_name` in the UI |
+| `social_links` | Footer/contact links | Ordered by `sort_order` |
+
+Every field beyond the essentials (`slug`/`title` for projects,
+`institution`/`degree` for education) is optional — the layout adapts
+gracefully when something is missing, and each section shows its own
+"coming soon" message rather than breaking if a table is empty.
+
+The schema, RLS policies (public read-only; writes happen through the
+Supabase dashboard, never from the client) and seed data used for this
+project are in `supabase/schema.sql`.
 
 ### Replacing the résumé PDF
 
-Replace `public/resume/resume.pdf` with your own file (same filename, or
-update `pdfPath`/`fileName` in `src/content/resume.js`).
+Upload your PDF anywhere with a public URL (e.g. Supabase Storage, or keep
+`public/resume/resume.pdf` and point `site_settings.resume_url` at it),
+then set `resume_url` (and optionally `resume_file_name`) on the
+`site_settings` row.
 
-### Adding project images
+### If Supabase is unreachable or a table is empty
 
-Project and about-page images are optional. Add a file under `src/assets/`
-or `public/`, then set the `image` field on the project (or `about.image`)
-to its path. Projects with no image automatically render an abstract
-placeholder pattern instead of a broken image.
+Every section fetches independently and fails independently — one broken
+table never blanks the rest of the page. The hero, nav and footer fall
+back to generic "YOUR NAME" placeholder text (never invented content) so
+the page never renders visibly blank; other sections show a plain
+"— will be added soon" message.
 
 ## Architecture
 
 ```
 src/
-  content/      # all editable copy and data — the only place you should
-                # normally need to touch
-  pages/        # one file per route, composed from components + content
+  content/       # UI-only structural constants (nav labels/ids, the
+                 # generic name fallback) — NOT content; see Supabase above
+  lib/
+    supabase.js  # Supabase client (env-configured)
+    scrollTo.js  # anchor-nav smooth scroll, offset for the sticky navbar
+  services/      # one thin fetch function per table — the only files
+                 # that talk to Supabase
+  hooks/
+    usePortfolioData.jsx  # fetches everything once on load, in parallel;
+                           # provides it via context to every section
+    useActiveSection.js   # drives the navbar's active-link indicator
+    useReducedMotion.js / useFinePointer.js / useScrollToTop.js
+  pages/
+    Home.jsx     # assembles all sections into the single scrolling page
+    Project.jsx  # optional /work/:slug detail route, lazy-loaded
+    NotFound.jsx # optional 404, lazy-loaded
   components/
-    layout/     # Navbar-less shell: Layout, Footer, Helmet
-    navigation/ # Navbar, MobileMenu
-    ui/         # Line (signature motif), SectionLabel, RevealText,
-                # ArrowLink, Container, PlaceholderMedia
-    animations/ # SceneVideo, ScrollProgressLine, Cursor, PageTransition
-    projects/   # ProjectListItem, ProjectFilter
-    education/  # Timeline, TimelineItem
-  hooks/        # useReducedMotion, useFinePointer, useScrollToTop
+    Sections/    # Hero, About, Education, Work, Currently, Resume, Contact
+                 # — each id="..." for anchor scrolling
+    Video/
+      CinematicVideo.jsx   # large scroll-linked cinematic video layer
+    Motion/
+      ParametricGeometry.jsx  # code-generated deforming grid for About
+                               # (no 4th video was provided)
+    layout/      # Layout, Footer, Helmet
+    navigation/  # Navbar, MobileMenu (anchor-scroll, not routed)
+    ui/          # Line (signature motif), SectionLabel, RevealText,
+                 # ArrowLink, Container, PlaceholderMedia
+    animations/  # ScrollProgressLine, Cursor, PageTransition
+    projects/    # ProjectListItem, ProjectFilter
+    education/   # Timeline, TimelineItem
   assets/
-    animations/ # building-construction / surveying-contours /
-                # data-analysis .mp4 + poster .jpg, used on Home,
-                # Education and Work respectively (see below)
+    animations/  # building-construction / surveying-contours /
+                  # data-analysis .mp4 + poster .jpg
 ```
 
 The thin terracotta line is the site's one recurring visual motif —
@@ -77,37 +110,67 @@ scroll-progress indicator and a hover underline.
 All motion respects `prefers-reduced-motion`; the site is fully usable and
 legible with animation disabled.
 
-### Scene videos
+## One continuous page
 
-Three silent, looping visuals reinforce the site's build → measure →
-analyse narrative: `components/animations/SceneVideo.jsx` renders them
-consistently everywhere they're used (Home hero, Education, Work).
+The primary route is `/`. There is no `/about`, `/education`, `/work`,
+`/resume` or `/contact` route — those are sections on the same page,
+reached by smooth-scrolling to `#about`, `#education`, etc. (see
+`lib/scrollTo.js` and `hooks/useActiveSection.js`). The navbar and footer
+both scroll to a section directly when already on `/`, or navigate to
+`/#section-id` first when on another route (e.g. a project detail page).
 
-- Plays only while scrolled into view (`IntersectionObserver`), pausing
-  once it leaves.
-- Renders a static poster image instead of `<video>` entirely under
-  `prefers-reduced-motion: reduce` — no autoplay, layout unchanged.
-- Dissolves into the page background rather than sitting in a framed
-  box: `mix-blend-mode: screen` drops out the video's near-black
-  backdrop (the source files are pre-processed with a black-crush curve
-  so this is seamless), and a radial vignette overlay (painted in the
-  exact page background colour) feathers the rectangular edges away.
-  Combining `mask-image` with `mix-blend-mode` on the same element was
-  tried first and produces a visible dark halo in Chromium — the
-  vignette-overlay approach avoids that.
+`/work/:slug` remains available as an optional deeper read on a single
+project, and a catch-all 404 route exists for anything else; both are
+code-split and load lazily since the single-page experience is primary.
 
-To replace a scene video, swap the `.mp4`/`-poster.jpg` pair in
+## Cinematic video layers
+
+Three silent, looping visuals carry a quiet build → transform → map →
+analyse narrative through the page:
+
+| Section | Visual | Source |
+| --- | --- | --- |
+| Hero | Building construction | `building-construction.mp4` |
+| About | Deforming parametric grid | code-generated SVG (`ParametricGeometry.jsx`) — no 4th video was provided |
+| Education | Surveying / contour mesh | `surveying-contours.mp4` |
+| Work | Data / network graph | `data-analysis.mp4` |
+| Contact | The same contour mesh, extremely faint | `surveying-contours.mp4` |
+
+`components/Video/CinematicVideo.jsx` renders every video layer
+consistently:
+
+- **Scroll-linked, not boxed.** Each layer is large and positioned to
+  overlap into the text column rather than sitting beside it in a small
+  rectangle. Opacity and scale are driven by how far the section has
+  scrolled through the viewport (`framer-motion`'s `useScroll` +
+  `useTransform` against a ref to the section), so adjacent sections
+  naturally crossfade as one leaves and the next enters — there are no
+  hard cuts. The hero additionally plays a one-time mount fade-in, since
+  it's already fully visible at load with nothing to "scroll into".
+- **Dissolves into the background.** `mix-blend-mode: screen` drops the
+  video's near-black backdrop (the source files are pre-processed with a
+  black-crush curve so this is seamless), and a separate vignette-overlay
+  element — painted in the exact page background colour, not a CSS mask
+  on the blended element itself — feathers the rectangular edges away.
+  (Combining `mask-image` with `mix-blend-mode` on one element was tried
+  first; it produces a visible dark halo in Chromium.)
+- **Performance.** Only the hero video preloads eagerly
+  (`preload="auto"`); the others use `preload="metadata"` and only start
+  decoding once scrolled near-into view. An `IntersectionObserver`
+  pauses every video once it's scrolled well out of view, independent of
+  its (separate) scroll-linked opacity.
+- **Reduced motion.** No `<video>` element is rendered at all — a static
+  poster image takes its place at a fixed, lower opacity, and the layout
+  is otherwise unchanged.
+
+To swap a video, replace the `.mp4`/`-poster.jpg` pair in
 `src/assets/animations/` (same filenames) — no component changes needed.
 
 ## Routes
 
 ```
-/                  Home
-/about             About
-/education         Education
-/work              Work index (data-driven, filterable by category)
-/work/:slug        Project detail (one reusable template)
-/resume            Resume
-/contact           Contact
-*                  404
+/                  The single-page portfolio (Hero, About, Education,
+                   Work, Currently, Resume, Contact — all one scroll)
+/work/:slug        Optional project detail (lazy-loaded)
+*                  404 (lazy-loaded)
 ```

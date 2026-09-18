@@ -1,32 +1,25 @@
-// Global, site-wide content. Edit this file to change identity, navigation
-// labels and footer/meta information. Nothing here should require touching
-// any component.
+// Structural, UI-only constants — everything that is actual content
+// (name, tagline, email, socials, resume link...) now lives in Supabase
+// (see src/services/) and is fetched at runtime via usePortfolioData().
+//
+// This file only defines *which* sections exist and in what order, since
+// that's a layout decision, not content.
 
-export const site = {
-  name: {
-    first: "YOUR",
-    last: "NAME",
-  },
-  displayName: "YOUR NAME",
+// Used only when the corresponding Supabase row is missing/unreachable,
+// so the page never renders visibly blank — not real content, just the
+// same "replace me" placeholder convention as the rest of the site.
+export const fallbackSite = {
+  name: "YOUR NAME",
   role: ["ENGINEERING", "DATA", "RESEARCH"],
-  intro:
-    "Exploring the intersection of engineering, computation and ideas.",
-  location: "Based somewhere / working everywhere",
-  email: "hello@example.com",
-  year: new Date().getFullYear(),
+  intro: "Exploring the intersection of engineering, computation and ideas.",
 };
 
-// Primary navigation. Order here controls order everywhere it is rendered.
 export const nav = [
-  { label: "About", path: "/about" },
-  { label: "Education", path: "/education" },
-  { label: "Work", path: "/work" },
-  { label: "Resume", path: "/resume" },
-  { label: "Contact", path: "/contact" },
+  { label: "About", id: "about" },
+  { label: "Education", id: "education" },
+  { label: "Work", id: "work" },
+  { label: "Resume", id: "resume" },
+  { label: "Contact", id: "contact" },
 ];
 
-export const socials = [
-  { label: "GitHub", url: "https://github.com/" },
-  { label: "LinkedIn", url: "https://linkedin.com/" },
-  { label: "Email", url: `mailto:${site.email}` },
-];
+export const sectionIds = nav.map((item) => item.id);
