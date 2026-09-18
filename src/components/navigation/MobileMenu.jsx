@@ -1,11 +1,10 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { nav } from "../../content/site.js";
 import { Line } from "../ui/Line.jsx";
 
-export function MobileMenu({ onClose, currentPath }) {
+export function MobileMenu({ onClose, activeId, onNavigate }) {
   const closeRef = useRef(null);
 
   useEffect(() => {
@@ -47,24 +46,24 @@ export function MobileMenu({ onClose, currentPath }) {
 
       <nav className="mt-10 flex flex-1 flex-col justify-center gap-2" aria-label="Primary">
         {nav.map((item, index) => {
-          const isActive = currentPath === item.path;
+          const isActive = activeId === item.id;
           return (
             <motion.div
-              key={item.path}
+              key={item.id}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 * index, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             >
-              <Link
-                to={item.path}
-                onClick={onClose}
-                className="flex items-baseline gap-4 border-b border-line/30 py-4 font-display text-4xl text-ink transition-colors hover:text-accent"
+              <button
+                type="button"
+                onClick={() => onNavigate(item.id)}
+                className="flex w-full items-baseline gap-4 border-b border-line/30 py-4 text-left font-display text-4xl text-ink transition-colors hover:text-accent"
               >
                 <span className="text-xs text-accent">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <span className={isActive ? "text-accent" : ""}>{item.label}</span>
-              </Link>
+              </button>
             </motion.div>
           );
         })}

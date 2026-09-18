@@ -1,13 +1,30 @@
 import { useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { site, nav } from "../../content/site.js";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import { nav, sectionIds, fallbackSite } from "../../content/site.js";
+import { usePortfolioData } from "../../hooks/usePortfolioData.jsx";
+import { useActiveSection } from "../../hooks/useActiveSection.js";
+import { scrollToSection } from "../../lib/scrollTo.js";
 import { Container } from "../ui/Container.jsx";
 import { MobileMenu } from "./MobileMenu.jsx";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { siteSettings } = usePortfolioData();
+  const activeId = useActiveSection(sectionIds);
+  const displayName = siteSettings?.name || fallbackSite.name;
+  const onHome = location.pathname === "/";
+
+  function goToSection(id) {
+    if (onHome) {
+      scrollToSection(id);
+    } else {
+      navigate(`/#${id}`);
+    }
+    setOpen(false);
+  }
 
   return (
     <header className="sticky top-0 z-30 border-b border-line/40 bg-bg/90 backdrop-blur-sm">
@@ -18,17 +35,19 @@ export function Navbar() {
             className="text-sm font-semibold uppercase tracking-widest2 text-ink transition-colors hover:text-accent"
             onClick={() => setOpen(false)}
           >
-            {site.displayName}
+            {displayName}
           </Link>
 
           <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
-            {nav.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className="relative py-2 text-xs uppercase tracking-widest2 text-muted transition-colors hover:text-ink"
-              >
-                {({ isActive }) => (
+            {nav.map((item) => {
+              const isActive = onHome && activeId === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => goToSection(item.id)}
+                  className="relative py-2 text-xs uppercase tracking-widest2 text-muted transition-colors hover:text-ink"
+                >
                   <span className="relative">
                     <span className={isActive ? "text-ink" : ""}>{item.label}</span>
                     {isActive && (
@@ -39,9 +58,9 @@ export function Navbar() {
                       />
                     )}
                   </span>
-                )}
-              </NavLink>
-            ))}
+                </button>
+              );
+            })}
           </nav>
 
           <button
@@ -60,7 +79,8 @@ export function Navbar() {
         {open && (
           <MobileMenu
             onClose={() => setOpen(false)}
-            currentPath={location.pathname}
+            activeId={onHome ? activeId : null}
+            onNavigate={goToSection}
           />
         )}
       </AnimatePresence>
