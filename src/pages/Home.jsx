@@ -4,12 +4,14 @@ import { Line } from "../components/ui/Line.jsx";
 import { SectionLabel } from "../components/ui/SectionLabel.jsx";
 import { RevealText } from "../components/ui/RevealText.jsx";
 import { ArrowLink } from "../components/ui/ArrowLink.jsx";
-import { BackgroundGeometry } from "../components/animations/BackgroundGeometry.jsx";
+import { SceneVideo } from "../components/animations/SceneVideo.jsx";
 import { ProjectListItem } from "../components/projects/ProjectListItem.jsx";
 import { site } from "../content/site.js";
 import { about } from "../content/about.js";
 import { education } from "../content/education.js";
 import { projects } from "../content/projects.js";
+import buildingVideo from "../assets/animations/building-construction.mp4";
+import buildingPoster from "../assets/animations/building-construction-poster.jpg";
 
 export default function Home() {
   const featured = projects.slice(0, 4);
@@ -21,27 +23,33 @@ export default function Home() {
 
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <Container className="relative flex min-h-[86vh] items-center py-20">
-          <BackgroundGeometry className="absolute -right-16 top-1/2 h-[560px] w-[560px] -translate-y-1/2 opacity-70" />
+        <Container className="py-20 lg:min-h-[86vh] lg:py-0">
+          <div className="hero-grid">
+            <div className="hero-text max-w-2xl">
+              <RevealText as="p" className="text-xs uppercase tracking-widest2 text-accent">
+                {site.role.join(" / ")}
+              </RevealText>
 
-          <div className="relative max-w-2xl">
-            <RevealText as="p" className="text-xs uppercase tracking-widest2 text-accent">
-              {site.role.join(" / ")}
+              <RevealText delay={0.08}>
+                <h1 className="mt-6 font-display text-6xl leading-[0.95] text-ink sm:text-8xl">
+                  {site.name.first}
+                  <br />
+                  {site.name.last}
+                </h1>
+              </RevealText>
+
+              <RevealText delay={0.18} className="mt-8 max-w-md text-lg leading-relaxed text-muted balance">
+                {site.intro}
+              </RevealText>
+            </div>
+
+            <RevealText as="div" delay={0.2} className="hero-video">
+              <div className="mx-auto aspect-[4/3] w-full max-w-sm lg:mx-0 lg:aspect-auto lg:h-[460px] lg:max-w-none">
+                <SceneVideo src={buildingVideo} poster={buildingPoster} priority />
+              </div>
             </RevealText>
 
-            <RevealText delay={0.08}>
-              <h1 className="mt-6 font-display text-6xl leading-[0.95] text-ink sm:text-8xl">
-                {site.name.first}
-                <br />
-                {site.name.last}
-              </h1>
-            </RevealText>
-
-            <RevealText delay={0.18} className="mt-8 max-w-md text-lg leading-relaxed text-muted balance">
-              {site.intro}
-            </RevealText>
-
-            <RevealText delay={0.28} className="mt-10">
+            <RevealText delay={0.32} className="hero-cta">
               <ArrowLink to="/work">Explore work</ArrowLink>
             </RevealText>
           </div>

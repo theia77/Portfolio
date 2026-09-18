@@ -60,11 +60,14 @@ src/
     navigation/ # Navbar, MobileMenu
     ui/         # Line (signature motif), SectionLabel, RevealText,
                 # ArrowLink, Container, PlaceholderMedia
-    animations/ # BackgroundGeometry, ScrollProgressLine, Cursor,
-                # PageTransition
+    animations/ # SceneVideo, ScrollProgressLine, Cursor, PageTransition
     projects/   # ProjectListItem, ProjectFilter
     education/  # Timeline, TimelineItem
   hooks/        # useReducedMotion, useFinePointer, useScrollToTop
+  assets/
+    animations/ # building-construction / surveying-contours /
+                # data-analysis .mp4 + poster .jpg, used on Home,
+                # Education and Work respectively (see below)
 ```
 
 The thin terracotta line is the site's one recurring visual motif —
@@ -73,6 +76,28 @@ scroll-progress indicator and a hover underline.
 
 All motion respects `prefers-reduced-motion`; the site is fully usable and
 legible with animation disabled.
+
+### Scene videos
+
+Three silent, looping visuals reinforce the site's build → measure →
+analyse narrative: `components/animations/SceneVideo.jsx` renders them
+consistently everywhere they're used (Home hero, Education, Work).
+
+- Plays only while scrolled into view (`IntersectionObserver`), pausing
+  once it leaves.
+- Renders a static poster image instead of `<video>` entirely under
+  `prefers-reduced-motion: reduce` — no autoplay, layout unchanged.
+- Dissolves into the page background rather than sitting in a framed
+  box: `mix-blend-mode: screen` drops out the video's near-black
+  backdrop (the source files are pre-processed with a black-crush curve
+  so this is seamless), and a radial vignette overlay (painted in the
+  exact page background colour) feathers the rectangular edges away.
+  Combining `mask-image` with `mix-blend-mode` on the same element was
+  tried first and produces a visible dark halo in Chromium — the
+  vignette-overlay approach avoids that.
+
+To replace a scene video, swap the `.mp4`/`-poster.jpg` pair in
+`src/assets/animations/` (same filenames) — no component changes needed.
 
 ## Routes
 

@@ -99,42 +99,62 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
-@keyframes slow-rotate {
-  from {
-    transform: rotate(0deg);
+/*
+ * Home hero layout: mobile stacks name/intro -> video -> CTA (matching
+ * reading order); desktop arranges text and CTA in a left column beside
+ * the video, without duplicating markup per breakpoint.
+ */
+.hero-grid {
+  display: grid;
+  grid-template-areas: "text" "video" "cta";
+  grid-template-columns: 1fr;
+  row-gap: 2.5rem;
+}
+.hero-grid > .hero-text {
+  grid-area: text;
+}
+.hero-grid > .hero-video {
+  grid-area: video;
+}
+.hero-grid > .hero-cta {
+  grid-area: cta;
+}
+
+@media (min-width: 1024px) {
+  .hero-grid {
+    grid-template-areas: "text video" "cta video";
+    grid-template-columns: 1.05fr 1fr;
+    column-gap: 4rem;
+    align-items: center;
   }
-  to {
-    transform: rotate(360deg);
+  .hero-grid > .hero-cta {
+    align-self: start;
   }
 }
 
-@keyframes slow-rotate-reverse {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(-360deg);
-  }
+/*
+ * Scene videos (building / surveying / data visuals) dissolve into the
+ * charcoal background rather than sitting in a framed box: `screen` blend
+ * drops out their near-black backdrop, leaving only the bright linework. A
+ * separate vignette overlay (painted in the exact page background colour,
+ * not a mask on the blended element itself — combining mask-image with
+ * mix-blend-mode on one element produces a visible dark halo in Chromium)
+ * feathers the rectangular edges away.
+ */
+.scene-video-blend {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: screen;
 }
 
-@keyframes slow-drift {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-14px);
-  }
-}
-
-.animate-slow-rotate {
-  animation: slow-rotate 160s linear infinite;
-}
-
-.animate-slow-rotate-reverse {
-  animation: slow-rotate-reverse 220s linear infinite;
-}
-
-.animate-slow-drift {
-  animation: slow-drift 14s ease-in-out infinite;
+.scene-video-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 62% 62% at center,
+    transparent 0%,
+    #20201e 100%
+  );
 }
