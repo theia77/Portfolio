@@ -20,6 +20,7 @@ export default [
         performance: "readonly",
         requestAnimationFrame: "readonly",
         cancelAnimationFrame: "readonly",
+        confirm: "readonly",
       },
     },
     plugins: { react, "react-hooks": reactHooks },

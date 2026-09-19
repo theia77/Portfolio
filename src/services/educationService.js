@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase.js";
+import { createCrudService } from "./crudHelpers.js";
 
 /** All education entries, in editor-controlled order. */
 export async function fetchEducation() {
@@ -11,3 +12,5 @@ export async function fetchEducation() {
 
   return { data: data ?? [], error };
 }
+
+export const educationCrud = createCrudService("education");

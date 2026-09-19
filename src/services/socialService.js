@@ -1,4 +1,7 @@
 import { supabase } from "../lib/supabase.js";
+import { createCrudService } from "./crudHelpers.js";
+
+export const socialLinksCrud = createCrudService("social_links");
 
 /** Social/contact links, in editor-controlled order. */
 export async function fetchSocialLinks() {

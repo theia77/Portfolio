@@ -88,7 +88,7 @@ export function ParametricGeometry({ sectionRef, maxOpacity = 0.5, className = "
   return (
     <motion.div
       aria-hidden="true"
-      className={`pointer-events-none absolute overflow-hidden ${className}`}
+      className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}
       style={reduced ? { opacity: maxOpacity * 0.8 } : { opacity, scale }}
     >
       <svg

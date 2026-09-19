@@ -44,9 +44,10 @@ Every field beyond the essentials (`slug`/`title` for projects,
 gracefully when something is missing, and each section shows its own
 "coming soon" message rather than breaking if a table is empty.
 
-The schema, RLS policies (public read-only; writes happen through the
-Supabase dashboard, never from the client) and seed data used for this
-project are in `supabase/schema.sql`.
+The schema, RLS policies and seed data used for this project are in
+`supabase/schema.sql`. Content can now also be edited from the built-in
+`/admin` dashboard — see [Admin dashboard](#admin-dashboard) below — in
+addition to editing rows directly in the Supabase dashboard.
 
 ### Replacing the résumé PDF
 
@@ -172,5 +173,86 @@ To swap a video, replace the `.mp4`/`-poster.jpg` pair in
 /                  The single-page portfolio (Hero, About, Education,
                    Work, Currently, Resume, Contact — all one scroll)
 /work/:slug        Optional project detail (lazy-loaded)
+/admin/login       Admin sign in
+/admin/signup      Create a Supabase Auth account (not an admin by default)
+/admin             Admin dashboard (protected, lazy-loaded)
 *                  404 (lazy-loaded)
 ```
+
+## Admin dashboard
+
+`/admin` is a small, separate CMS UI for editing the content described
+above without touching the Supabase table editor. It is authenticated
+with Supabase Auth and is **not** part of the public single-page bundle —
+every admin page and editor is lazy-loaded, so visitors to `/` never
+download any admin code.
+
+### Security model
+
+Signing up at `/admin/signup` only creates a normal Supabase Auth account.
+**It does not grant edit access.** Every new user is inserted into a
+`profiles` table with `role = 'user'` by a database trigger
+(`handle_new_user`, `SECURITY DEFINER`) — there is no client-writable path
+to that table at all, so a user can never grant themselves the `admin`
+role from the browser.
+
+Two independent layers enforce this:
+
+1. **App-level route protection** (`ProtectedAdminRoute`) — redirects
+   signed-out visitors to `/admin/login`, and shows "Access denied" for a
+   signed-in user whose `profiles.role` isn't `admin`. This is a UX
+   convenience only.
+2. **Database-level Row Level Security (RLS)** — the actual security
+   boundary. Every content table (`site_settings`, `about`, `education`,
+   `projects`, `skills`, `social_links`) keeps its existing public
+   `SELECT` policy and adds a write policy of
+   `FOR ALL USING (is_admin()) WITH CHECK (is_admin())`, where `is_admin()`
+   is a `SECURITY DEFINER` SQL function that checks the *caller's own*
+   `profiles.role`. Even a signed-in, non-admin user's `INSERT`/`UPDATE`/
+   `DELETE` is rejected by Postgres itself — not just hidden by the UI.
+
+The frontend only ever uses `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`
+(the anon key, gated entirely by RLS). The Supabase **service-role key is
+never used in this app** and must never be placed in frontend code or
+`.env` files that ship to the browser.
+
+The schema for `profiles`, the `handle_new_user` trigger, `is_admin()`,
+and the per-table admin write policies live in `supabase/schema.sql`
+alongside the rest of the schema.
+
+### Creating the first admin
+
+There is no hardcoded admin password and no way to self-promote from the
+UI. Promote an account manually, once, from the Supabase SQL editor:
+
+1. Sign up normally at `/admin/signup` with the email you want to use as
+   admin. This creates a regular (non-admin) account.
+2. In the Supabase dashboard, open **SQL Editor** and run:
+
+   ```sql
+   update profiles
+   set role = 'admin'
+   where email = 'you@example.com';
+   ```
+
+3. Sign in again at `/admin/login` (or refresh if already signed in) —
+   the account now has admin access.
+
+Repeat step 2 for any additional admin you want to add.
+
+### What's editable
+
+| Editor | Table(s) | Notes |
+| --- | --- | --- |
+| Overview | — | Live content counts, links into each editor |
+| About | `about` | Single record |
+| Education | `education` | Add / edit / delete / reorder |
+| Projects | `projects` | Full field set (overview, objective, approach, process, outcome, learnings, tools, links, featured flag); slug auto-generates from the title if left blank |
+| Skills | `skills` | Grouped by free-text group name; add / edit / delete / reorder within a group |
+| Contact / Socials | `social_links` | Add / edit / delete / reorder |
+| Resume | `site_settings` | Résumé URL, file name, summary — never hardcoded in a component |
+| Site Settings | `site_settings` | Name, role/tagline, intro, email, copyright year |
+
+Every editor shows explicit Saving / Saved / Error states and surfaces
+the underlying Supabase error message on failure rather than failing
+silently.

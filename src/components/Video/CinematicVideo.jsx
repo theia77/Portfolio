@@ -14,6 +14,11 @@ import { useReducedMotion } from "../../hooks/useReducedMotion.js";
  * Every other section uses a symmetric scroll-linked fade in/out as it
  * transits the viewport, which is what gives adjacent sections their
  * crossfade overlap.
+ *
+ * Always fills its parent (`absolute inset-0`) rather than taking its
+ * own position/size — the caller supplies a sized, positioned box tied
+ * to the same text grid (usually a child of `Container`), so the video
+ * is never off fighting its own coordinate system against the copy.
  */
 export function CinematicVideo({
   sectionRef,
@@ -77,7 +82,7 @@ export function CinematicVideo({
     return (
       <div
         aria-hidden="true"
-        className={`pointer-events-none absolute overflow-hidden ${className}`}
+        className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}
         style={{ opacity: maxOpacity * 0.8 }}
       >
         <img src={poster} alt="" className="scene-video-blend" />
@@ -89,7 +94,7 @@ export function CinematicVideo({
   return (
     <motion.div
       aria-hidden="true"
-      className={`pointer-events-none absolute overflow-hidden ${className}`}
+      className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}
       style={{ opacity: scrollOpacity, scale }}
     >
       <motion.div
