@@ -15,3 +15,17 @@ export async function fetchSiteSettings() {
 
   return { data, error };
 }
+
+/** Admin-only: update the single site_settings row (id = 1). */
+export async function updateSiteSettings(patch) {
+  if (!supabase) return { data: null, error: new Error("Supabase not configured") };
+
+  const { data, error } = await supabase
+    .from("site_settings")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("id", 1)
+    .select()
+    .maybeSingle();
+
+  return { data, error };
+}

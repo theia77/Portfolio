@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import { RevealText } from "../ui/RevealText.jsx";
 import { ArrowLink } from "../ui/ArrowLink.jsx";
+import { Container } from "../ui/Container.jsx";
 import { CinematicVideo } from "../Video/CinematicVideo.jsx";
 import { scrollToSection } from "../../lib/scrollTo.js";
 import { fallbackSite } from "../../content/site.js";
@@ -19,23 +20,9 @@ export const Hero = forwardRef(function Hero({ siteSettings }, ref) {
   const role = settings.role?.length ? settings.role.join(" / ") : "";
 
   return (
-    <section
-      ref={ref}
-      id="hero"
-      className="relative flex min-h-screen items-center overflow-hidden pt-16 sm:pt-20"
-    >
-      <CinematicVideo
-        sectionRef={ref}
-        mode="hero"
-        src={buildingVideo}
-        poster={buildingPoster}
-        maxOpacity={0.7}
-        priority
-        className="inset-y-[6%] left-[28%] right-[-8%] sm:left-[32%] lg:left-[38%]"
-      />
-
-      <div className="relative z-10 mx-auto w-full max-w-content px-6 sm:px-10 lg:px-16">
-        <div className="max-w-xl">
+    <section ref={ref} id="hero" className="relative overflow-hidden pt-16 sm:pt-20">
+      <Container className="hero-grid min-h-[calc(100vh-4rem)] py-14 sm:min-h-[calc(100vh-5rem)] sm:py-20">
+        <div className="hero-text max-w-xl">
           {role && (
             <RevealText as="p" className="text-xs uppercase tracking-widest2 text-accent">
               {role}
@@ -59,12 +46,25 @@ export const Hero = forwardRef(function Hero({ siteSettings }, ref) {
               {settings.intro}
             </RevealText>
           )}
-
-          <RevealText delay={0.28} className="mt-10">
-            <ArrowLink onClick={() => scrollToSection("work")}>Explore work</ArrowLink>
-          </RevealText>
         </div>
-      </div>
+
+        <RevealText as="div" delay={0.22} className="hero-video">
+          <div className="relative aspect-[4/3] w-full sm:aspect-square lg:aspect-[4/5]">
+            <CinematicVideo
+              sectionRef={ref}
+              mode="hero"
+              src={buildingVideo}
+              poster={buildingPoster}
+              maxOpacity={0.75}
+              priority
+            />
+          </div>
+        </RevealText>
+
+        <RevealText delay={0.32} className="hero-cta">
+          <ArrowLink onClick={() => scrollToSection("work")}>Explore work</ArrowLink>
+        </RevealText>
+      </Container>
     </section>
   );
 });

@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase.js";
+import { createCrudService } from "./crudHelpers.js";
 
 /** All projects, in editor-controlled order. */
 export async function fetchProjects() {
@@ -24,3 +25,5 @@ export async function fetchProjectBySlug(slug) {
 
   return { data, error };
 }
+
+export const projectsCrud = createCrudService("projects");

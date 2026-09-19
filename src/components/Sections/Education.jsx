@@ -10,29 +10,34 @@ import surveyingPoster from "../../assets/animations/surveying-contours-poster.j
 export const Education = forwardRef(function Education({ entries, status }, ref) {
   return (
     <section ref={ref} id="education" className="relative overflow-hidden py-32 sm:py-40">
-      <CinematicVideo
-        sectionRef={ref}
-        src={surveyingVideo}
-        poster={surveyingPoster}
-        maxOpacity={0.4}
-        className="inset-y-[5%] left-[10%] right-[5%] lg:right-[15%]"
-      />
+      <Container>
+        {/* Same right-hand gutter convention as About — anchored to the
+            text grid, desktop only, well clear of the timeline column. */}
+        <div className="pointer-events-none absolute inset-y-[14%] right-6 hidden w-[32%] lg:block xl:right-16">
+          <CinematicVideo
+            sectionRef={ref}
+            src={surveyingVideo}
+            poster={surveyingPoster}
+            maxOpacity={0.4}
+          />
+        </div>
 
-      <Container className="relative z-10">
-        <SectionLabel index="02" label="Education" />
+        <div className="relative max-w-2xl">
+          <SectionLabel index="02" label="Education" />
 
-        <RevealText as="h2" delay={0.05} className="mt-6 font-display text-4xl text-ink sm:text-5xl">
-          Education
-        </RevealText>
+          <RevealText as="h2" delay={0.05} className="mt-6 font-display text-4xl text-ink sm:text-5xl">
+            Education
+          </RevealText>
 
-        <div className="mt-20">
-          {status === "loading" && entries.length === 0 && (
-            <p className="text-sm text-muted">Loading…</p>
-          )}
-          {status === "ready" && entries.length === 0 && (
-            <p className="text-sm text-muted">Education history will be added soon.</p>
-          )}
-          {entries.length > 0 && <Timeline entries={entries} />}
+          <div className="mt-20">
+            {status === "loading" && entries.length === 0 && (
+              <p className="text-sm text-muted">Loading…</p>
+            )}
+            {status === "ready" && entries.length === 0 && (
+              <p className="text-sm text-muted">Education history will be added soon.</p>
+            )}
+            {entries.length > 0 && <Timeline entries={entries} />}
+          </div>
         </div>
       </Container>
     </section>

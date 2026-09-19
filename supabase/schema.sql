@@ -5,8 +5,10 @@
 -- tables the site reads from, then edit rows directly in the Table
 -- Editor going forward — that's the whole point.
 --
--- Every table is public-read (anon key) only; content is edited via the
--- Supabase dashboard / authenticated access, never from the client.
+-- Every table is public-read (anon key). Writes are gated by Row Level
+-- Security to admin users only (see the "Admin auth" section below) —
+-- content can be edited either from the Supabase dashboard directly or
+-- from this app's /admin dashboard.
 
 create extension if not exists pgcrypto;
 
@@ -206,3 +208,75 @@ select * from (values
   ('email','Email','mailto:hello@example.com',2)
 ) as seed(platform, label, url, sort_order)
 where not exists (select 1 from social_links);
+
+-- ---------------------------------------------------------------------
+-- Admin auth — profiles, the auto-signup trigger, and RLS write
+-- policies backing the /admin dashboard. See README.md "Admin
+-- dashboard" for the security rationale and the first-admin SQL.
+-- ---------------------------------------------------------------------
+
+create table if not exists profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text,
+  role text not null default 'user' check (role in ('user', 'admin')),
+  created_at timestamptz not null default now()
+);
+
+alter table profiles enable row level security;
+
+create policy "Users read own profile" on profiles
+  for select using (auth.uid() = id);
+
+-- Intentionally no insert/update/delete policy for regular users:
+-- profiles.role can only change via direct SQL (or the trigger below),
+-- never from the client, so a signed-up user can never self-promote.
+
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, email, role) values (new.id, new.email, 'user');
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles where id = auth.uid() and role = 'admin'
+  );
+$$;
+
+revoke execute on function public.is_admin() from public;
+grant execute on function public.is_admin() to anon, authenticated;
+
+create policy "Admin write site_settings" on site_settings
+  for all using (public.is_admin()) with check (public.is_admin());
+create policy "Admin write about" on about
+  for all using (public.is_admin()) with check (public.is_admin());
+create policy "Admin write education" on education
+  for all using (public.is_admin()) with check (public.is_admin());
+create policy "Admin write projects" on projects
+  for all using (public.is_admin()) with check (public.is_admin());
+create policy "Admin write skills" on skills
+  for all using (public.is_admin()) with check (public.is_admin());
+create policy "Admin write social_links" on social_links
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- To make the first admin, after signing up at /admin/signup:
+--   update profiles set role = 'admin' where email = 'you@example.com';
